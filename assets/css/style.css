@@ -1,0 +1,148 @@
+.alertku {
+    animation: fadeIn 1s;
+    width: 40%;
+    padding: 5%;
+    top: 20%;
+    left: 30%;
+    position: fixed;
+    z-index: 1;
+    text-align: center;
+    background-color: #f44336;
+    color: white;
+    border-radius: 0.5em;
+}
+
+.alertku-msg {
+    animation: fadeIn 1s;
+    width: 40%;
+    padding: 5%;
+    top: 20%;
+    left: 30%;
+    position: fixed;
+    z-index: 1;
+    text-align: center;
+    background-color: #057d18;
+    color: white;
+    border-radius: 0.5em;
+}
+.closebtn {
+    /*animation: fadeOut 1s;*/
+    margin-left: 15px;
+    color: white;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.closebtn:hover {
+    color: black;
+}
+
+.pay {
+    animation: fadeIn 1s;
+    width: 50%;
+    padding-top: 1%;
+    padding-right: 5%;
+    padding-bottom: 5%;
+    padding-left: 5%;
+
+    /*padding-top: 1%;*/
+    /*padding-right: 5%;*/
+    /*padding: 5%;*/
+    /*padding-left: 5%;*/
+    top: 10%;
+    bottom: 10%;
+    left: 25%;
+    position: fixed;
+    z-index: 1;
+    text-align: center;
+    background-color: #ffffff;
+    /*color: #2025ff;*/
+    border-radius: 0.5em;
+    font-size: 1.5rem;
+    /*font-size: 1rem;*/
+}
+
+@media (max-width: 376px) {
+    .pay {
+        animation: fadeIn 1s;
+        width: 100%;
+        /*padding: 5%;*/
+        top: 20%;
+        bottom: 20%;
+        left: 0;
+        position: fixed;
+        z-index: 1;
+        text-align: center;
+        background-color: #ffffff;
+        /*color: #2025ff;*/
+        border-radius: 0;
+        font-size: 1rem;
+        /*font-size: 1rem;*/
+    }
+}
+
+@media (min-width: 376px) and (max-width: 700px) {
+    .pay {
+        animation: fadeIn 1s;
+        width: 80%;
+        height: 100%;
+        /*padding: 5%;*/
+        top: 0;
+        bottom: 0;
+        left: 10%;
+        position: fixed;
+        z-index: 1;
+        text-align: center;
+        background-color: #ffffff;
+        /*color: #2025ff;*/
+        border-radius: 0;
+        font-size: 1rem;
+        /*font-size: 1rem;*/
+    }
+}
+
+.back-to {
+    color: #c7b8ff;
+    font-size: .938rem;
+   /*position: fixed;*/
+    text-align: left;
+}
+
+@-webkit-keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@-moz-keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@-o-keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}

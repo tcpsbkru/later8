@@ -1,0 +1,58 @@
+
+reCAPTCHA
+bitscharity.com
+
+
+Analytics
+Requests passed & failed?
+This site's traffic is below the minimum required to display charts.
+Spam index?
+This site's traffic is below the minimum required to display charts.
+Adding reCAPTCHA to your site
+Site key
+Use this in the HTML code your site serves to users.
+6LeV03oUAAAAAGs4TuLdA2gQXX2Y6f9AWwTXCzyJ
+Secret key
+Use this for communication between your site and Google. Be sure to keep it a secret.
+6LeV03oUAAAAAKRglSorIa36dYzVSXMUhC8tUX5x
+Paste this snippet before the closing </head> tag on your HTML template:
+<script src='https://www.google.com/recaptcha/api.js'></script>
+Paste this snippet at the end of the <form> to create a button protected by reCAPTCHA. You will need to create a callback function to handle the result.
+<button
+class="g-recaptcha"
+data-sitekey="6LeV03oUAAAAAGs4TuLdA2gQXX2Y6f9AWwTXCzyJ"
+data-callback="YourOnSubmitFn">
+Submit
+</button>
+The reCAPTCHA documentation site provides more details and advanced configuration options.
+When your users submit the form where you integrated reCAPTCHA, you'll get as part of the payload a string with the name "g-recaptcha-response". In order to check whether Google has verified that user, send a POST request with these parameters:
+URL: https://www.google.com/recaptcha/api/siteverify
+secret (required)	6LeV03oUAAAAAKRglSorIa36dYzVSXMUhC8tUX5x
+response (required)	The value of 'g-recaptcha-response'.
+remoteip	The end user's ip address.
+The reCAPTCHA documentation site describes more details and advanced configurations.
+Key Settings
+
+Label(Invisible reCAPTCHA)
+
+For example, example.com: Comments page
+Domains
+(one per line)
+bitscharity.com
+Owners
+(one per line)
+lisakalex@gmail.com
+Send alerts to owners?
+About reCAPTCHA|Documentation|Privacy & Terms� 2018 Google
+
+
+           <button class="g-recaptcha"
+                                                data-sitekey="6LeV03oUAAAAAGs4TuLdA2gQXX2Y6f9AWwTXCzyJ"
+                                                data-callback="onSubmit" name="doLogin" value="Login">
+                                            Submit
+                                        </button>
+
+
+http://localhost/bits3/login.php
+
+ow to add reCAPTCHA to your forms
