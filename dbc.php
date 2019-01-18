@@ -19,8 +19,7 @@ if ($_SERVER ['SERVER_NAME'] === "bitscharity.com") {
 }
 $admin_user = 'admin';
 $admin_pass = 'Zaichik1';
-function page_protect()
-{
+function page_protect() {
     session_start();
 
     // check for cookies
@@ -34,8 +33,7 @@ function page_protect()
     }
 }
 
-function filter($link, $data)
-{
+function filter($link, $data) {
     $data = trim(htmlentities(strip_tags($data)));
 
     if (get_magic_quotes_gpc())
@@ -46,8 +44,7 @@ function filter($link, $data)
     return $data;
 }
 
-function ChopStr($str, $len)
-{
+function ChopStr($str, $len) {
     if (strlen($str) < $len)
         return $str;
 
@@ -58,13 +55,11 @@ function ChopStr($str, $len)
     return $str . "...";
 }
 
-function isEmail($email)
-{
+function isEmail($email) {
     return preg_match('/^\S+@[\w\d.-]{2,}\.[\w]{2,6}$/iU', $email) ? TRUE : FALSE;
 }
 
-function isUserID($username)
-{
+function isUserID($username) {
     if (preg_match('/^[a-z\d_]{5,20}$/i', $username)) {
         return true;
     } else {
@@ -72,8 +67,7 @@ function isUserID($username)
     }
 }
 
-function isURL($url)
-{
+function isURL($url) {
     if (preg_match('/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i', $url)) {
         return true;
     } else {
@@ -81,8 +75,7 @@ function isURL($url)
     }
 }
 
-function checkPwd($x, $y)
-{
+function checkPwd($x, $y) {
     if (empty ($x) || empty ($y)) {
         return false;
     }
@@ -97,30 +90,25 @@ function checkPwd($x, $y)
 }
 
 // string manipulation functions
-function after($thiss, $inthat)
-{
+function after($thiss, $inthat) {
     if (!is_bool(strpos($inthat, $thiss))) {
         return substr($inthat, strpos($inthat, $thiss) + strlen($thiss));
     }
 }
 
-function between($thiss, $that, $inthat)
-{
+function between($thiss, $that, $inthat) {
     return before($that, after($thiss, $inthat));
 }
 
-function before($thiss, $inthat)
-{
+function before($thiss, $inthat) {
     return substr($inthat, 0, strpos($inthat, $thiss));
 }
 
-function found($haystack, $needle)
-{
+function found($haystack, $needle) {
     return (strpos($haystack, $needle) !== false);
 }
 
-function cutString($str, $amount = 1, $dir = "right")
-{
+function cutString($str, $amount = 1, $dir = "right") {
     if (($n = strlen($str)) > 0) {
         if ($dir == "right") {
             $start = 0;
@@ -137,20 +125,13 @@ function cutString($str, $amount = 1, $dir = "right")
 }
 
 // print array
-function printa($sweet)
-{
+function printa($sweet) {
     foreach ($sweet as $key => $value) {
         echo $key . "\t" . $value . "<br>";
     }
 }
 
-function satoshi_to_btc($value)
-{
-    return bcdiv(intval($value), 100000000, 8);
-}
-
-function confirmations($address)
-{
+function confirmations($address) {
     $url = "https://test-insight.bitpay.com/api/addr/" . $address . "/utxo";
     // $url = "https://insight.bitpay.com/api/addr/" . $address . "/utxo";
     $contents = file_get_contents($url, $headers = false);
@@ -169,8 +150,7 @@ function confirmations($address)
     return $bool;
 }
 
-function satoshis($address)
-{
+function satoshis($address) {
     $url = "https://test-insight.bitpay.com/api/addr/" . $address . "/utxo";
     // $url = "https://insight.bitpay.com/api/addr/" . $address . "/utxo";
     $contents = file_get_contents($url, $headers = false);
@@ -187,8 +167,7 @@ function satoshis($address)
     return $bool;
 }
 
-function get_link($page, $link)
-{
+function get_link($page, $link) {
     if ($page == $link)
         echo "active";
 }
@@ -208,15 +187,37 @@ if (mysqli_stmt_prepare($stmt, 'SELECT count(*) AS total FROM bits WHERE payment
     mysqli_stmt_close($stmt);
 }
 
-function usd_in_satoshi()
-{
+function satoshi_to_btc($satoshi) {
+    return bcdiv($satoshi, 100000000, 8);
+}
+
+function btc_to_satoshi($btc) {
+    return $btc * 100000000;
+}
+
+function usd_to_satoshi($usd) {
+    return bcdiv($usd, get_rate(), 8) * 100000000;
+}
+
+function satoshi_to_usd($satoshi) {
+    return round($satoshi * get_rate() / 100000000, 2);
+}
+
+function usd_to_btc($usd) {
+    return bcdiv($usd, get_rate(), 8);
+}
+
+function btc_to_usd($btc) {
+    return round($btc * get_rate(), 2);
+}
+
+//get exchange rate 1 btc to usd
+function get_rate() {
     $url = "https://bitpay.com/api/rates/BTC/USD";
     $contents = file_get_contents($url, $headers = false);
     $arr_json = json_decode($contents, true);
-    $btc_in_usd = $arr_json['rate'];
-    $usd_in_btc = 1 / $btc_in_usd;
-    return $usd_in_btc * 100000000;
-    }
+    return $arr_json['rate'];
+}
 
 //function post_captcha($user_response)
 //{

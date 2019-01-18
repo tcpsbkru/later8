@@ -1,0 +1,12 @@
+ <td class=item>
+                                            <form class="login" action="account.php" method="post">
+                                                <input name="id" type="hidden" value="<?= $id ?>">
+                                                <?php
+                                                if ($payment == "confirmed_wrong_amount" || $payment == "pending") { ?>
+                                                    <input class="btn-gradient-secondary btn-sm"
+                                                           name="pay_owed_name" type="submit"
+                                                           value="pay">
+                                                <?php } ?>
+
+                                            </form>
+                                        </td>

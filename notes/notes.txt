@@ -446,3 +446,14 @@ https://chrome.google.com/webstore/detail/xdebug-helper/eadndfjplgieldjbigjakmdg
 UPDATE bits SET expected_satoshis=1, actual_gvb=2, owed_gvb=3,  payment='a' WHERE id=3;
 
 SELECT SUM(actual_gvb) FROM bits WHERE user_id=1;
+
+~~~~~~~~~~~~~~~~~
+Transactions by Address
+https://test-insight.bitpay.com/api/txs/?address=mzHJ57cVo8PmtkCNSkbKVgPxSRRpTZcfUa
+
+Unspent Outputs
+/api/addr/[:addr]/utxo[?noCache=1]
+https://test-insight.bitpay.com/api/addr/mzHJ57cVo8PmtkCNSkbKVgPxSRRpTZcfUa/utxo?noCache=1
+
+Your order has been placed successfully.
+Thank you for shopping at Euro Car Parts. You will shortly receive an email confirmation to alexlisak@hotmail.com

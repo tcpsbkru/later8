@@ -13,7 +13,7 @@ if (mysqli_stmt_prepare($stmt, 'SELECT user_id, owed_gvb FROM bits WHERE owed_gv
     while (mysqli_stmt_fetch($stmt)) {
         $bits[] = array($user_id, $owed_gvb);
     }
-   // print_r($bits);
+
     $num = mysqli_stmt_num_rows($stmt);
     mysqli_stmt_close($stmt);
 

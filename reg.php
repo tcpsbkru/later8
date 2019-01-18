@@ -22,6 +22,7 @@ if (filter_input(INPUT_POST, 'doRegister') === 'Register') {
     $sq = $data ['sq'];
     $sa = $data ['sa'];
     $agree = $data ['agree'];
+    $eth = $data ['eth'];
 
 //     server side validation
     if (empty ($full_name) || strlen($full_name) < 3) {
@@ -103,10 +104,10 @@ if (filter_input(INPUT_POST, 'doRegister') === 'Register') {
 //    }
 
     $stmt = mysqli_stmt_init($link);
-    $sql = "INSERT INTO users (full_name, user_name, user_email, pwd, address, country, tel, fax, website, user_ip, sq, sa, activation_code, agree, account_date)
-	VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())";
+    $sql = "INSERT INTO users (eth, full_name, user_name, user_email, pwd, address, country, tel, fax, website, user_ip, sq, sa, activation_code, agree, account_date)
+	VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())";
     if (mysqli_stmt_prepare($stmt, $sql)) {
-        mysqli_stmt_bind_param($stmt, "ssssssssssssii", $full_name, $user_name, $user_email, $md5pass, $address, $country, $tel, $fax, $web, $user_ip, $sq, $sa, $activation_code, $agree);
+        mysqli_stmt_bind_param($stmt, "sssssssssssssii", $eth, $full_name, $user_name, $user_email, $md5pass, $address, $country, $tel, $fax, $web, $user_ip, $sq, $sa, $activation_code, $agree);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
@@ -121,6 +122,7 @@ if (filter_input(INPUT_POST, 'doRegister') === 'Register') {
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
+
     // send email
     $message = "Thank you for registering with us. Here are your login details...\n
 User ID: $user_name
@@ -343,6 +345,13 @@ if (isset ($_GET ['err'])) {
                                                         <input type="text" class="form-control" name="sa" value=""
                                                                required>
                                                         <label for="sa">Secret answer</label>
+                                                    </fieldset>
+                                                </div>
+                                                <div class="col-12">
+                                                    <fieldset class="form-label-group">
+                                                        <input type="text" class="form-control" name="eth" value=""
+                                                               required>
+                                                        <label for="eth">Ethereum address</label>
                                                     </fieldset>
                                                 </div>
                                                 <right><input type="checkbox" name="agree" value="1" class="switchery"

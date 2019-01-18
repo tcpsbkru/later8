@@ -24,9 +24,90 @@ if (filter_input(INPUT_POST, 'pay_name') === 'pay') {
         $data [$key] = filter($link, $value);
     }
 
-    $cus_address = $data ['cus_address'];
-    $expected_gvb = $data ['quantity'];
-    $expected_satoshis = $expected_gvb * usd_in_satoshi();
+
+    $expected_usd = $data ['quantity'];
+    $expected_satoshis = usd_to_satoshi($expected_usd);
+
+    $new_address = 0;
+    $limit = 1;
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM transactions WHERE new_address=? LIMIT ?')) {
+        mysqli_stmt_bind_param($stmt, "ii", $new_address, $limit);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $id);
+        mysqli_stmt_fetch($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    $stmt = mysqli_stmt_init($link);
+    $sql = "INSERT INTO items (users_id, usd, purchase_date)
+	VALUES(?,?,now())";
+    if (mysqli_stmt_prepare($stmt, $sql)) {
+        mysqli_stmt_bind_param($stmt, "id", $user_id, $expected_usd);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    $items_id = mysqli_insert_id($link);
+
+
+    $new_address = 1;
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET items_id=?, new_address=?, expected_satoshis=?, expected_usd=?, paytime=now()  WHERE id=? ')) {
+        mysqli_stmt_bind_param($stmt, "iiidi", $items_id, $new_address, $expected_satoshis, $expected_usd,  $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    //    $unconfirmed = "unconfirmed";
+    //    $stmt = mysqli_stmt_init($link);
+    //    if (mysqli_stmt_prepare($stmt, 'SELECT user_id FROM gvb WHERE user_id=?')) {
+    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
+    //        mysqli_stmt_execute($stmt);
+    //        mysqli_stmt_bind_result($stmt, $user_id_g);
+    //        mysqli_stmt_fetch($stmt);
+    ////        $num = mysqli_stmt_num_rows($stmt);
+    //        mysqli_stmt_close($stmt);
+    //
+    //        if ($user_id != $user_id_g){
+    //            $stmt = mysqli_stmt_init($link);
+    //            $sql = "INSERT INTO gvb  (user_id)
+    //	            VALUES(?)";
+    //            if (mysqli_stmt_prepare($stmt, $sql)) {
+    //                mysqli_stmt_bind_param($stmt, "i", $user_id);
+    //                mysqli_stmt_execute($stmt);
+    //                mysqli_stmt_close($stmt);
+    //            }
+    //        }
+    //
+    //    }
+
+
+    //    $stmt = mysqli_stmt_init($link);
+    //    if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb_t	 FROM gvb WHERE user_id=?')) {
+    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
+    //        mysqli_stmt_execute($stmt);
+    //        mysqli_stmt_bind_result($stmt, $expected_gvb_t);
+    //        mysqli_stmt_fetch($stmt);
+    //        mysqli_stmt_close($stmt);
+    //    }
+    //
+    //    $expected_gvb_t = $expected_gvb_t + $expected_gvb;
+    //    $stmt = mysqli_stmt_init($link);
+    //    if (mysqli_stmt_prepare($stmt, 'UPDATE gvb SET expected_gvb_t=? WHERE user_id=?')) {
+    //        mysqli_stmt_bind_param($stmt, "di", $expected_gvb_t, $user_id);
+    //        mysqli_stmt_execute($stmt);
+    //        mysqli_stmt_close($stmt);
+    //    }
+    header("Location: pay.php?id=$id");
+}
+
+if (filter_input(INPUT_POST, 'pay_owed_name') === 'pay') {
+    // Sanitizing
+    //    foreach ($_POST as $key => $value) {
+    //        $data [$key] = filter($link, $value);
+    //    }
+    //    $id = $data ['id'];
 
     $payment = "new";
     $limit = 1;
@@ -39,34 +120,71 @@ if (filter_input(INPUT_POST, 'pay_name') === 'pay') {
         mysqli_stmt_close($stmt);
     }
 
-    $payment = "pending";
+    //  //
+    //    $stmt = mysqli_stmt_init($link);
+    //    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb) FROM bits WHERE user_id=?')) {
+    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
+    //        mysqli_stmt_execute($stmt);
+    //        mysqli_stmt_bind_result($stmt, $expected_gvb_total);
+    //        mysqli_stmt_fetch($stmt);
+    //        mysqli_stmt_close($stmt);
+    //    }
+    //
+    //    $stmt = mysqli_stmt_init($link);
+    //    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?')) {
+    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
+    //        mysqli_stmt_execute($stmt);
+    //        mysqli_stmt_bind_result($stmt, $actual_gvb_total);
+    //        mysqli_stmt_fetch($stmt);
+    //        mysqli_stmt_close($stmt);
+    //    }
+    $expected_gvb_total = null;
+    $actual_gvb_total = null;
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'UPDATE bits SET user_id=?, expected_satoshis=?, expected_gvb=?, owed_gvb=?, payment=?, cus_address=?, paytime=now()  WHERE id=? ')) {
-        mysqli_stmt_bind_param($stmt, "iiddssi", $user_id, $expected_satoshis, $expected_gvb, $expected_gvb, $payment, $cus_address, $id);
+    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM bits WHERE user_id=?')) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
         mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $expected_gvb_total, $actual_gvb_total);
+        mysqli_stmt_fetch($stmt);
         mysqli_stmt_close($stmt);
     }
 
-    header("Location: pay.php?id=$id");
-}
-
-if (filter_input(INPUT_POST, 'pay_owed_name') === 'pay') {
-// Sanitizing
-    foreach ($_POST as $key => $value) {
-        $data [$key] = filter($link, $value);
+    $owed_gvb = $expected_gvb_total - $actual_gvb_total;
+    $expected_satoshis = usd_to_satoshi($expected_gvb_total - $actual_gvb_total);
+    $payment = "pending";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE bits SET user_id=?, expected_satoshis=?, owed_gvb=?, payment=?, paytime=now()  WHERE id=? ')) {
+        mysqli_stmt_bind_param($stmt, "iidsi", $user_id, $expected_satoshis, $owed_gvb, $payment, $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
     }
-    $id = $data ['id'];
     header("Location: pay.php?id=$id");
 }
 
+//get data for account
+//$stmt = mysqli_stmt_init($link);
+//if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb, owed_gvb, payment, paytime, SUM(expected_gvb), SUM(actual_gvb) FROM bits WHERE user_id=?')) {
+//    mysqli_stmt_bind_param($stmt, "i", $user_id);
+//    mysqli_stmt_execute($stmt);
+//    mysqli_stmt_bind_result($stmt, $expected_gvb, $owed_gvb, $payment, $paytime, $expected_gvb_total, $actual_gvb_total);
+//
+//    while (mysqli_stmt_fetch($stmt)) {
+//        $transactions[] = array($expected_gvb, $owed_gvb, $payment, $paytime, $expected_gvb_total, $actual_gvb_total);
+//    }
+//
+//    $num_of_transactions = mysqli_stmt_num_rows($stmt);
+//    mysqli_stmt_close($stmt);
+//}
+
+//get data for account
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT id, expected_gvb, owed_gvb, payment, address, paytime FROM bits WHERE user_id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb, actual_gvb, payment, paytime FROM bits WHERE user_id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $id, $expected_gvb, $owed_gvb, $payment, $address, $paytime);
+    mysqli_stmt_bind_result($stmt, $expected_gvb, $actual_gvb, $payment, $paytime);
 
     while (mysqli_stmt_fetch($stmt)) {
-        $transactions[] = array($id, $expected_gvb, $owed_gvb, $payment, $address, $paytime);
+        $transactions[] = array($expected_gvb, $actual_gvb, $payment, $paytime);
     }
 
     $num_of_transactions = mysqli_stmt_num_rows($stmt);
@@ -74,13 +192,32 @@ if (mysqli_stmt_prepare($stmt, 'SELECT id, expected_gvb, owed_gvb, payment, addr
 }
 
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM bits WHERE user_id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $total);
+    mysqli_stmt_bind_result($stmt, $expected_gvb_total, $actual_gvb_total);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 }
+// get total gvb
+//$stmt = mysqli_stmt_init($link);
+//if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb) FROM bits WHERE user_id=?')) {
+//    mysqli_stmt_bind_param($stmt, "i", $user_id);
+//    mysqli_stmt_execute($stmt);
+//    mysqli_stmt_bind_result($stmt, $total);
+//    mysqli_stmt_fetch($stmt);
+//    mysqli_stmt_close($stmt);
+//}
+//
+//// get total outstanding gvb
+//$stmt = mysqli_stmt_init($link);
+//if (mysqli_stmt_prepare($stmt, 'SELECT SUM(owed_gvb) FROM bits WHERE user_id=?')) {
+//    mysqli_stmt_bind_param($stmt, "i", $user_id);
+//    mysqli_stmt_execute($stmt);
+//    mysqli_stmt_bind_result($stmt, $total_owed_gvb);
+//    mysqli_stmt_fetch($stmt);
+//    mysqli_stmt_close($stmt);
+//}
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -118,7 +255,20 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?
 
     <link rel="stylesheet" type="text/css" href="assets/css/style.css">
 
-    <!-- Histats.com  START  (aync)-->    <script type="text/javascript">var _Hasync = _Hasync || [];        _Hasync.push(['Histats.start', '1,4027956,4,0,0,0,00010000']);        _Hasync.push(['Histats.fasi', '1']);        _Hasync.push(['Histats.track_hits', '']);        (function () {            var hs = document.createElement('script');            hs.type = 'text/javascript';            hs.async = true;            hs.src = ('//s10.histats.com/js15_as.js');            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);        })();</script>    <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?4027956&101" alt="stats counter"                                               border="0"></a></noscript>    <!-- Histats.com  END  --></head>
+    <!-- Histats.com  START  (aync)-->
+    <script type="text/javascript">var _Hasync = _Hasync || [];
+        _Hasync.push(['Histats.start', '1,4027956,4,0,0,0,00010000']);
+        _Hasync.push(['Histats.fasi', '1']);
+        _Hasync.push(['Histats.track_hits', '']);
+        (function () {
+            var hs = document.createElement('script');
+            hs.type = 'text/javascript';
+            hs.async = true;
+            hs.src = ('//s10.histats.com/js15_as.js');
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+        })();</script>
+    <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?4027956&101" alt="stats counter"
+                                               border="0"></a></noscript>    <!-- Histats.com  END  --></head>
 <body class="vertical-layout vertical-compact-menu 2-columns   menu-expanded fixed-navbar" data-open="click"
       data-menu="vertical-compact-menu" data-col="2-columns">
 
@@ -204,18 +354,17 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?
                     <h2>Welcome <?php echo $_SESSION ['user_name']; ?></h2>
 
                     <div class="card-body">
-                        To send BTC, you can use any private or exchange wallet.
-                        This is your unique deposit address. Once funds are received in
-                        this address your balance will be updated shortly.
+
                     </div>
                     <div class="card pull-up">
                         <div class="card-content">
                             <div class="card-body">
                                 <div class="col-12" style="padding-right: 30px; padding-left: 30px;">
                                     <div class="row">
-                                        <div class="col-md-8 col-12">
-                                            <p><strong>Your balance:</strong></p>
-                                            <h1><?= $total ?> GVB</h1>
+                                        <div class="card-body">
+                                            To send BTC, you can use any private or exchange wallet.
+                                            This is your unique deposit address. Once funds are received in
+                                            this address your balance will be updated shortly
                                             <p class="mb-0">
                                             </p>
                                         </div>
@@ -223,10 +372,10 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?
                                     <form class="" action="account.php" method="post"
                                           name="logForm" id="logForm">
                                         <input type=hidden name=follow_id value=''>
-                                        <fieldset class="form-label-group">
-                                            <input class=form-control name="cus_address" type="text">
-                                            <label for="">Your Ethereum address</label>
-                                        </fieldset>
+<!--                                        <fieldset class="form-label-group">-->
+<!--                                            <input class=form-control name="cus_address" type="text">-->
+<!--                                            <label for="">Your Ethereum address</label>-->
+<!--                                        </fieldset>-->
                                         <fieldset class="form-label-group" style="padding-right: 60%;">
                                             <input class=form-control type="text" name="quantity">
                                             <label for="">GVB</label>
@@ -234,7 +383,6 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?
                                         <div>
                                             <input class="btn-gradient-secondary btn-sm" name="pay_name" type="submit"
                                                    id="pay" value="pay">
-                                            <!--                                            <a class="btn-gradient-secondary btn-sm1 white" href="?a=deposit">Invest Now</a>-->
                                         </div>
                                     </form>
                                 </div>
@@ -247,12 +395,16 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?
                     <div class="card">
                         <div class="card-content collapse show">
                             <div class="card-body">
-                                <p><b>Last Access: Oct-31-2018 01:13:37 AM</b></p>
-                                Registration Date: Oct-26-2018<br>
-                                Total Deposit: $<b><?= $total ?> GVB</b><br>
-                                Withdrew Total: $<b>0.00</b><br>
-                                Active Deposit: $<b>0.00</b><br>
-                                Earned Total: $<b>0.00</b>
+<!--                                <p><b>Last Access: Oct-31-2018 01:13:37 AM</b></p>-->
+<!--                                Registration Date: Oct-26-2018<br>-->
+                                <p><b>Your balance</b></p>
+                                Total: $<?= $expected_gvb_total ?><br>
+                                Outstanding: $<?= $expected_gvb_total - $actual_gvb_total ?><br>
+                                <p><b>Pay outstanding balance</b></p>
+                                <form class="login" action="account.php" method="post">
+                                    <input class="btn-gradient-secondary btn-sm" name="pay_owed_name" type="submit"
+                                           value="pay">
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -272,75 +424,50 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?
         <div class="content-header row">
         </div>
         <h3>Your deposits:</h3><br>
-        <b>Total: <?= $total ?> GVB</b><br><br>
+
         <div class="table-responsive">
             <div class="card">
                 <table cellspacing=1 cellpadding=2 border=0 width=100% class=table table-de mb-0>
                     <tr>
                         <td class=item>
                             <table cellspacing=1 cellpadding=2 border=0 width=100%>
-                                <!--                                <tr>-->
-                                <!--                                    <td colspan=3 align=center><b>5.5% Daily for 20 Business Days</b></td>-->
-                                <!--                                </tr>-->
                                 <tr>
                                     <td class=inheader><b>Date</b></td>
-                                    <td class=inheader><b>GVB</b></td>
+                                    <td class=inheader><b>Requested</b></td>
+                                    <td class=inheader><b>Paid</b></td>
                                     <td class=inheader><b>Outstanding</b></td>
                                     <td class=inheader><b>Transaction</b></td>
-                                    <!--                                    <td class=inheader><b>Address</b></td>-->
-                                    <td class=inheader><b>Pay</b></td>
-                                    <!--                                    <td class=inheader width=200>Amount Spent ($)</td>-->
-                                    <!--                                    <td class=inheader width=100 nowrap>-->
-                                    <!--                                        <nobr>Daily Profit (%)</nobr>-->
-                                    <!--                                    </td>-->
                                 </tr>
                                 <?php
                                 for ($i = 0;
                                      $i < $num_of_transactions;
                                      $i++) {
-                                    // $id, $expected_gvb, $owed_gvb, $payment, $address, $paytime
-                                    $date = date_create($transactions [$i] [5]);
-                                    $date = date_format($date, 'd/m/Y');
-                                    $expected_gvb = $transactions [$i] [1];
-                                    $payment = $transactions [$i] [3];
-                                    $owed_gvb = $transactions [$i] [2];
-                                    $address = $transactions [$i] [4];
-                                    $id = $transactions [$i] [0];
-                                    ?>
-                                    <tr>
-                                        <td class=item><?= $date ?></td>
-                                        <td class=item><?= $expected_gvb . " GVB " ?></td>
-                                        <td class=item><?= $owed_gvb . " GVB " ?></td>
-                                        <td class=item><?php if ($payment == "confirmed" OR $payment == "confirmed_wrong_amount") {
-                                                echo "confirmed";
-                                            } else {
-                                                echo $payment;
-                                            } ?></td>
-                                        <!--                                    <td class=item>-->
-                                        <? //= $address ?><!--</td>-->
-                                        <td class=item>
-                                            <form class="login" action="account.php" method="post">
-                                                <input name="id" type="hidden" value="<?= $id ?>">
-                                                <?php
-                                                if ($payment == "confirmed_wrong_amount" || $payment == "pending") { ?>
-                                                    <input class="btn-gradient-secondary btn-sm"
-                                                           name="pay_owed_name" type="submit"
-                                                           value="pay">
-                                                <?php } ?>
+                                    // $expected_gvb, $owed_gvb, $payment, $paytime, $expected_gvb_total, $actual_gvb_total
+                                    $expected_gvb = $transactions [$i] [0];
+                                    $actual_gvb = $transactions [$i] [1];
+                                    $payment = $transactions [$i] [2];
+                                    $paytime = date_create($transactions [$i] [3]);
+                                    $paytime = date_format($paytime, 'd/m/Y');
+                                    $owed_gvb = $expected_gvb - $actual_gvb;
 
-                                            </form>
-                                        </td>
-                                        <!--                                    <td class=item align=right>$10.00 - $10000.00</td>-->
-                                        <!--                                    <td class=item align=right>5.50</td>-->
-                                    </tr>
-                                    <?php
+                                    if ($expected_gvb > 0) {
+                                        echo "<tr>";
+                                        echo "<td class=item>" . $paytime . "</td>";
+                                        echo "<td class=item>" . $expected_gvb . " GVB</td>";
+                                        echo "<td class=item>$ " . $actual_gvb . "</td>";
+                                        if ($owed_gvb > 0) {
+                                            echo "<td class=item><b style='color: red'>$ " . $owed_gvb . "</b></td>";
+                                        } else {
+                                            echo "<td class=item>$ " . $owed_gvb . "</td>";
+                                        }
+                                        echo "<td class=item>" . $payment . "</td>";
+                                        echo "</tr>";
+                                    }
                                 } ?>
                             </table>
-
                         </td>
                     </tr>
                 </table>
-
             </div>
         </div>
     </div>

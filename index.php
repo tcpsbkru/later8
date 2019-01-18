@@ -40,7 +40,7 @@ We offer a wide variety of personal deposit products which you can find below. S
     <link rel="stylesheet" type="text/css" href="assets/css/style.css">
     <script>
         // Set the date we're counting down to
-        var countDownDate = new Date("Dec 28, 2018 00:00:00").getTime();
+        var countDownDate = new Date("Apr 1, 2019 00:00:00").getTime();
 
         // Update the count down every 1 second
         var x = setInterval(function () {

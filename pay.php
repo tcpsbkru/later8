@@ -7,19 +7,22 @@ if (isset ($_GET ['id'])) {
     $id = mysqli_real_escape_string($link, $_GET ['id']);
 }
 
+$address = null;
+$expected_satoshis = null;
+
 /* create a prepared statement http://php.net/manual/en/mysqli-stmt.prepare.php */
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT address, expected_satoshis FROM bits WHERE id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT bitcoin, expected_satoshis FROM transactions WHERE id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_bind_result($stmt, $address, $expected_satoshis);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 }
-
 mysqli_close($link);
-$expected_satoshis = satoshi_to_btc($expected_satoshis);
-$qr = "bitcoin:" . $address . "?amount=" . $expected_satoshis;
+
+$expected_btc = satoshi_to_btc($expected_satoshis);
+$qr = "bitcoin:" . $address . "?amount=" . $expected_btc;
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -55,8 +58,7 @@ $qr = "bitcoin:" . $address . "?amount=" . $expected_satoshis;
     <p>Scan this QR</p>
     <img src="qr/php/qr_img.php?d=<?= $qr ?>&s=6">
     <p><?= $address ?></p>
-    <p><?= $expected_satoshis ?> BTC</p>
-
+    <p><?= $expected_btc ?> BTC</p>
 </div>
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
