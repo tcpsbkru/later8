@@ -15,14 +15,14 @@ $stmt = mysqli_stmt_init($link);
 if (mysqli_stmt_prepare($stmt, 'SELECT bitcoin, expected_satoshis FROM transactions WHERE id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $address, $expected_satoshis);
+    mysqli_stmt_bind_result($stmt, $bitcoin, $expected_satoshis);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 }
 mysqli_close($link);
 
 $expected_btc = satoshi_to_btc($expected_satoshis);
-$qr = "bitcoin:" . $address . "?amount=" . $expected_btc;
+$qr = "bitcoin:" . $bitcoin . "?amount=" . $expected_btc;
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -57,7 +57,7 @@ $qr = "bitcoin:" . $address . "?amount=" . $expected_btc;
     <p class="back-to"> <a href="account.php">back to account</a></p>
     <p>Scan this QR</p>
     <img src="qr/php/qr_img.php?d=<?= $qr ?>&s=6">
-    <p><?= $address ?></p>
+    <p><?= $bitcoin ?></p>
     <p><?= $expected_btc ?> BTC</p>
 </div>
 <!--Start of Tawk.to Script-->

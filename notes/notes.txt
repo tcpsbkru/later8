@@ -457,3 +457,18 @@ https://test-insight.bitpay.com/api/addr/mzHJ57cVo8PmtkCNSkbKVgPxSRRpTZcfUa/utxo
 
 Your order has been placed successfully.
 Thank you for shopping at Euro Car Parts. You will shortly receive an email confirmation to alexlisak@hotmail.com
+
+// get exchange rate of USD to BTC. 1GVB = 1USD
+//$url = "https://blockchain.info/tobtc?currency=USD&value=1";
+//$usd_in_btc = file_get_contents($url, $headers = false);
+//$usd_in_satoshi = $usd_in_btc * 100000000;
+//
+//this rate is more precise
+//$url = "https://bitpay.com/api/rates/BTC/USD";
+//$contents = file_get_contents($url, $headers = false);
+//$arr_json = json_decode($contents, true);
+//$btc_in_usd = $arr_json['rate'];
+//$usd_in_btc = 1 / $btc_in_usd;
+//$usd_in_satoshi = $usd_in_btc * 100000000;
+
+cRyAEtGG3LYdxM3VTkJnzVY4ctf9hXDpDKF8BorRAujZUaNsX85n

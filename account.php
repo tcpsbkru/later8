@@ -3,158 +3,93 @@ $url = $_SERVER ['REQUEST_URI'];
 header("Refresh: 600; URL=$url");
 include 'dbc.php';
 page_protect();
-$user_id = $_SESSION ['user_id'];
 
-// get exchange rate of USD to BTC. 1GVB = 1USD
-//$url = "https://blockchain.info/tobtc?currency=USD&value=1";
-//$usd_in_btc = file_get_contents($url, $headers = false);
-//$usd_in_satoshi = $usd_in_btc * 100000000;
-//
-//this rate is more precise
-//$url = "https://bitpay.com/api/rates/BTC/USD";
-//$contents = file_get_contents($url, $headers = false);
-//$arr_json = json_decode($contents, true);
-//$btc_in_usd = $arr_json['rate'];
-//$usd_in_btc = 1 / $btc_in_usd;
-//$usd_in_satoshi = $usd_in_btc * 100000000;
+$user_id = $_SESSION ['user_id'];
+$expected_usd_total = 0.00;
+$actual_usd_total = 0.00;
+$owed_usd_total = 0.00;
+$num_of_transactions = 0;
 
 if (filter_input(INPUT_POST, 'pay_name') === 'pay') {
-    // Sanitizing
     foreach ($_POST as $key => $value) {
         $data [$key] = filter($link, $value);
     }
 
-
     $expected_usd = $data ['quantity'];
     $expected_satoshis = usd_to_satoshi($expected_usd);
 
-    $new_address = 0;
+    $trans = "new";
     $limit = 1;
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM transactions WHERE new_address=? LIMIT ?')) {
-        mysqli_stmt_bind_param($stmt, "ii", $new_address, $limit);
+    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM transactions WHERE trans=? LIMIT ?')) {
+        mysqli_stmt_bind_param($stmt, "si", $trans, $limit);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_bind_result($stmt, $id);
         mysqli_stmt_fetch($stmt);
         mysqli_stmt_close($stmt);
     }
 
+    $trans = "pending";
     $stmt = mysqli_stmt_init($link);
-    $sql = "INSERT INTO items (users_id, usd, purchase_date)
-	VALUES(?,?,now())";
-    if (mysqli_stmt_prepare($stmt, $sql)) {
-        mysqli_stmt_bind_param($stmt, "id", $user_id, $expected_usd);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET users_id=?, trans=?, expected_satoshis=?, expected_usd=?, owed_usd=?, paytime=now()  WHERE id=?')) {
+        mysqli_stmt_bind_param($stmt, "isidii", $user_id, $trans, $expected_satoshis, $expected_usd, $expected_usd, $id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
 
-    $items_id = mysqli_insert_id($link);
-
-
-    $new_address = 1;
+    $pending = 0;
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET items_id=?, new_address=?, expected_satoshis=?, expected_usd=?, paytime=now()  WHERE id=? ')) {
-        mysqli_stmt_bind_param($stmt, "iiidi", $items_id, $new_address, $expected_satoshis, $expected_usd,  $id);
+    if (mysqli_stmt_prepare($stmt, 'SELECT pending FROM users WHERE id=?')) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $pending);
+        mysqli_stmt_fetch($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    $expected_usd = $expected_usd + $pending;
+    $complete = "no";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE users SET pending=?, complete=? WHERE id=?')) {
+        mysqli_stmt_bind_param($stmt, "dsi", $expected_usd, $complete, $user_id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
 
-    //    $unconfirmed = "unconfirmed";
-    //    $stmt = mysqli_stmt_init($link);
-    //    if (mysqli_stmt_prepare($stmt, 'SELECT user_id FROM gvb WHERE user_id=?')) {
-    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
-    //        mysqli_stmt_execute($stmt);
-    //        mysqli_stmt_bind_result($stmt, $user_id_g);
-    //        mysqli_stmt_fetch($stmt);
-    ////        $num = mysqli_stmt_num_rows($stmt);
-    //        mysqli_stmt_close($stmt);
-    //
-    //        if ($user_id != $user_id_g){
-    //            $stmt = mysqli_stmt_init($link);
-    //            $sql = "INSERT INTO gvb  (user_id)
-    //	            VALUES(?)";
-    //            if (mysqli_stmt_prepare($stmt, $sql)) {
-    //                mysqli_stmt_bind_param($stmt, "i", $user_id);
-    //                mysqli_stmt_execute($stmt);
-    //                mysqli_stmt_close($stmt);
-    //            }
-    //        }
-    //
-    //    }
-
-
-    //    $stmt = mysqli_stmt_init($link);
-    //    if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb_t	 FROM gvb WHERE user_id=?')) {
-    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
-    //        mysqli_stmt_execute($stmt);
-    //        mysqli_stmt_bind_result($stmt, $expected_gvb_t);
-    //        mysqli_stmt_fetch($stmt);
-    //        mysqli_stmt_close($stmt);
-    //    }
-    //
-    //    $expected_gvb_t = $expected_gvb_t + $expected_gvb;
-    //    $stmt = mysqli_stmt_init($link);
-    //    if (mysqli_stmt_prepare($stmt, 'UPDATE gvb SET expected_gvb_t=? WHERE user_id=?')) {
-    //        mysqli_stmt_bind_param($stmt, "di", $expected_gvb_t, $user_id);
-    //        mysqli_stmt_execute($stmt);
-    //        mysqli_stmt_close($stmt);
-    //    }
     header("Location: pay.php?id=$id");
 }
 
 if (filter_input(INPUT_POST, 'pay_owed_name') === 'pay') {
-    // Sanitizing
-    //    foreach ($_POST as $key => $value) {
-    //        $data [$key] = filter($link, $value);
-    //    }
-    //    $id = $data ['id'];
+    foreach ($_POST as $key => $value) {
+        $data [$key] = filter($link, $value);
+    }
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
+        mysqli_stmt_fetch($stmt);
+        mysqli_stmt_close($stmt);
+    }
 
-    $payment = "new";
+    $owed_usd_total = $expected_usd_total - $actual_usd_total;
+    $expected_satoshis = usd_to_satoshi($owed_usd_total);
+
+    $trans = "new";
     $limit = 1;
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM bits WHERE payment=? LIMIT ?')) {
-        mysqli_stmt_bind_param($stmt, "si", $payment, $limit);
+    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM transactions WHERE trans=? LIMIT ?')) {
+        mysqli_stmt_bind_param($stmt, "si", $trans, $limit);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_bind_result($stmt, $id);
         mysqli_stmt_fetch($stmt);
         mysqli_stmt_close($stmt);
     }
 
-    //  //
-    //    $stmt = mysqli_stmt_init($link);
-    //    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb) FROM bits WHERE user_id=?')) {
-    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
-    //        mysqli_stmt_execute($stmt);
-    //        mysqli_stmt_bind_result($stmt, $expected_gvb_total);
-    //        mysqli_stmt_fetch($stmt);
-    //        mysqli_stmt_close($stmt);
-    //    }
-    //
-    //    $stmt = mysqli_stmt_init($link);
-    //    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_gvb) FROM bits WHERE user_id=?')) {
-    //        mysqli_stmt_bind_param($stmt, "i", $user_id);
-    //        mysqli_stmt_execute($stmt);
-    //        mysqli_stmt_bind_result($stmt, $actual_gvb_total);
-    //        mysqli_stmt_fetch($stmt);
-    //        mysqli_stmt_close($stmt);
-    //    }
-    $expected_gvb_total = null;
-    $actual_gvb_total = null;
+    $trans = "pending";
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM bits WHERE user_id=?')) {
-        mysqli_stmt_bind_param($stmt, "i", $user_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $expected_gvb_total, $actual_gvb_total);
-        mysqli_stmt_fetch($stmt);
-        mysqli_stmt_close($stmt);
-    }
-
-    $owed_gvb = $expected_gvb_total - $actual_gvb_total;
-    $expected_satoshis = usd_to_satoshi($expected_gvb_total - $actual_gvb_total);
-    $payment = "pending";
-    $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'UPDATE bits SET user_id=?, expected_satoshis=?, owed_gvb=?, payment=?, paytime=now()  WHERE id=? ')) {
-        mysqli_stmt_bind_param($stmt, "iidsi", $user_id, $expected_satoshis, $owed_gvb, $payment, $id);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET users_id=?, trans=?, expected_satoshis=?, owed_usd=?, paytime=now()  WHERE id=?')) {
+        mysqli_stmt_bind_param($stmt, "isidi", $user_id, $trans, $expected_satoshis, $owed_usd_total, $id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
@@ -162,29 +97,14 @@ if (filter_input(INPUT_POST, 'pay_owed_name') === 'pay') {
 }
 
 //get data for account
-//$stmt = mysqli_stmt_init($link);
-//if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb, owed_gvb, payment, paytime, SUM(expected_gvb), SUM(actual_gvb) FROM bits WHERE user_id=?')) {
-//    mysqli_stmt_bind_param($stmt, "i", $user_id);
-//    mysqli_stmt_execute($stmt);
-//    mysqli_stmt_bind_result($stmt, $expected_gvb, $owed_gvb, $payment, $paytime, $expected_gvb_total, $actual_gvb_total);
-//
-//    while (mysqli_stmt_fetch($stmt)) {
-//        $transactions[] = array($expected_gvb, $owed_gvb, $payment, $paytime, $expected_gvb_total, $actual_gvb_total);
-//    }
-//
-//    $num_of_transactions = mysqli_stmt_num_rows($stmt);
-//    mysqli_stmt_close($stmt);
-//}
-
-//get data for account
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb, actual_gvb, payment, paytime FROM bits WHERE user_id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT trans, expected_usd, actual_usd,  paytime FROM transactions WHERE users_id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $expected_gvb, $actual_gvb, $payment, $paytime);
+    mysqli_stmt_bind_result($stmt, $trans, $expected_usd, $actual_usd, $paytime);
 
     while (mysqli_stmt_fetch($stmt)) {
-        $transactions[] = array($expected_gvb, $actual_gvb, $payment, $paytime);
+        $transactions[] = array($trans, $expected_usd, $actual_usd, $paytime);
     }
 
     $num_of_transactions = mysqli_stmt_num_rows($stmt);
@@ -192,32 +112,16 @@ if (mysqli_stmt_prepare($stmt, 'SELECT expected_gvb, actual_gvb, payment, paytim
 }
 
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM bits WHERE user_id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $expected_gvb_total, $actual_gvb_total);
+    mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 }
-// get total gvb
-//$stmt = mysqli_stmt_init($link);
-//if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb) FROM bits WHERE user_id=?')) {
-//    mysqli_stmt_bind_param($stmt, "i", $user_id);
-//    mysqli_stmt_execute($stmt);
-//    mysqli_stmt_bind_result($stmt, $total);
-//    mysqli_stmt_fetch($stmt);
-//    mysqli_stmt_close($stmt);
-//}
-//
-//// get total outstanding gvb
-//$stmt = mysqli_stmt_init($link);
-//if (mysqli_stmt_prepare($stmt, 'SELECT SUM(owed_gvb) FROM bits WHERE user_id=?')) {
-//    mysqli_stmt_bind_param($stmt, "i", $user_id);
-//    mysqli_stmt_execute($stmt);
-//    mysqli_stmt_bind_result($stmt, $total_owed_gvb);
-//    mysqli_stmt_fetch($stmt);
-//    mysqli_stmt_close($stmt);
-//}
+$expected_usd_total = number_format($expected_usd_total, 2, '.', '');
+$owed_usd_total = $expected_usd_total - $actual_usd_total;
+$owed_usd_total = number_format($owed_usd_total, 2, '.', '');
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -372,10 +276,10 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM b
                                     <form class="" action="account.php" method="post"
                                           name="logForm" id="logForm">
                                         <input type=hidden name=follow_id value=''>
-<!--                                        <fieldset class="form-label-group">-->
-<!--                                            <input class=form-control name="cus_address" type="text">-->
-<!--                                            <label for="">Your Ethereum address</label>-->
-<!--                                        </fieldset>-->
+                                        <!--                                        <fieldset class="form-label-group">-->
+                                        <!--                                            <input class=form-control name="cus_address" type="text">-->
+                                        <!--                                            <label for="">Your Ethereum address</label>-->
+                                        <!--                                        </fieldset>-->
                                         <fieldset class="form-label-group" style="padding-right: 60%;">
                                             <input class=form-control type="text" name="quantity">
                                             <label for="">GVB</label>
@@ -395,15 +299,29 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM b
                     <div class="card">
                         <div class="card-content collapse show">
                             <div class="card-body">
-<!--                                <p><b>Last Access: Oct-31-2018 01:13:37 AM</b></p>-->
-<!--                                Registration Date: Oct-26-2018<br>-->
+                                <!--                                <p><b>Last Access: Oct-31-2018 01:13:37 AM</b></p>-->
+                                <!--                                Registration Date: Oct-26-2018<br>-->
                                 <p><b>Your balance</b></p>
-                                Total: $<?= $expected_gvb_total ?><br>
-                                Outstanding: $<?= $expected_gvb_total - $actual_gvb_total ?><br>
+                                Total: $<?= $expected_usd_total ?><br>
+                                <?php
+                                if ($trans == "pending" || $trans == "unconfirmed") {
+                                    echo "Outstanding: $0.00";
+                                } else {
+                                    echo "Outstanding: $" . $owed_usd_total;
+                                }
+                                ?>
                                 <p><b>Pay outstanding balance</b></p>
                                 <form class="login" action="account.php" method="post">
-                                    <input class="btn-gradient-secondary btn-sm" name="pay_owed_name" type="submit"
-                                           value="pay">
+                                    <?php
+                                    if ($trans == "pending" || $trans == "unconfirmed") {
+                                        echo "<input disabled  class=\"btn-gradient-secondary-grey btn-sm\"  name=\"pay_owed_name\" type=\"submit\"
+                                            value=\"pay\">";
+                                    } else {
+                                        echo "<input  class=\"btn-gradient-secondary btn-sm\"  name=\"pay_owed_name\" type=\"submit\"
+                                            value=\"pay\">";
+                                    }
+                                    ?>
+
                                 </form>
                             </div>
                         </div>
@@ -442,27 +360,27 @@ if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_gvb), SUM(actual_gvb) FROM b
                                 for ($i = 0;
                                      $i < $num_of_transactions;
                                      $i++) {
-                                    // $expected_gvb, $owed_gvb, $payment, $paytime, $expected_gvb_total, $actual_gvb_total
-                                    $expected_gvb = $transactions [$i] [0];
-                                    $actual_gvb = $transactions [$i] [1];
-                                    $payment = $transactions [$i] [2];
+                                    // $expected_usd, $actual_usd, $trans, $paytime
+                                    $trans = $transactions [$i] [0];
+                                    $expected_usd = $transactions [$i] [1];
+                                    $actual_usd = $transactions [$i] [2];
                                     $paytime = date_create($transactions [$i] [3]);
                                     $paytime = date_format($paytime, 'd/m/Y');
-                                    $owed_gvb = $expected_gvb - $actual_gvb;
+                                    $owed_usd = $expected_usd - $actual_usd;
+                                    $owed_usd = number_format($owed_usd, 2, '.', '');
 
-                                    if ($expected_gvb > 0) {
-                                        echo "<tr>";
-                                        echo "<td class=item>" . $paytime . "</td>";
-                                        echo "<td class=item>" . $expected_gvb . " GVB</td>";
-                                        echo "<td class=item>$ " . $actual_gvb . "</td>";
-                                        if ($owed_gvb > 0) {
-                                            echo "<td class=item><b style='color: red'>$ " . $owed_gvb . "</b></td>";
+                                    echo "<tr><td class=item>$paytime</td><td class=item>$expected_usd GVB</td><td class=item>$$actual_usd</td>";
+
+                                    if ($trans == "pending" || $trans == "unconfirmed") {
+                                        echo "<td class=item>$0.00</td>";
+                                    } else {
+                                        if ($owed_usd > 0) {
+                                            echo "<td class=item><b style='color: red'>$$owed_usd</b></td>";
                                         } else {
-                                            echo "<td class=item>$ " . $owed_gvb . "</td>";
+                                            echo "<td class=item>$$owed_usd</td>";
                                         }
-                                        echo "<td class=item>" . $payment . "</td>";
-                                        echo "</tr>";
                                     }
+                                    echo "<td class=item>$trans</td></tr>";
                                 } ?>
                             </table>
                         </td>

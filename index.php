@@ -1276,7 +1276,7 @@ We offer a wide variety of personal deposit products which you can find below. S
             </div>
             <div class="copy-right mx-auto text-center">
                 <span class="copyright">Copyright &copy; 2018, <a href="index.php" title="latergain"
-                                                                  class="white"><?php echo  $newpayment ?></a></span>
+                                                                  class="white"><?php echo  $newtrans ?></a></span>
             </div>
         </div>
     </div>

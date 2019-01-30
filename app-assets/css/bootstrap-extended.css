@@ -681,7 +681,37 @@ select.form-control {
     box-shadow: 0 0 16px 0 rgba(255, 65, 55, .5)
 }
 
+.btn-gradient-secondary-grey {
+    border-radius: 2rem;
+    font-size: 1rem;
+    color: #fff;
+    padding: 1rem 3rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+    outline: none !important;
+    -webkit-transition: .5s;
+    -o-transition: .5s;
+    -moz-transition: .5s;
+    transition: .5s;
+    background-image: -webkit-gradient(linear, left top, right top, from(#989898), color-stop(51%, #ffffff), to(#989898));
+    background-image: -webkit-linear-gradient(left, #989898 0%, #ffffff 51%, #989898 100%);
+    background-image: -moz-linear-gradient(left, #989898 0%, #ffffff 51%, #989898 100%);
+    background-image: -o-linear-gradient(left, #989898 0%, #ffffff 51%, #989898 100%);
+    background-image: linear-gradient(to right, #989898 0%, #ffffff 51%, #989898 100%);
+    background-position: left center;
+    -webkit-background-size: 200% auto;
+    background-size: 200% auto;
+    border: 0;
+    -webkit-box-shadow: 0 0 16px 0 rgba(255, 65, 55, .5);
+    box-shadow: 0 0 16px 0 rgba(255, 65, 55, .5)
+}
+
 .btn-gradient-secondary:hover {
+    background-position: right center;
+    text-decoration: none
+}
+
+.btn-gradient-secondary-grey:hover {
     background-position: right center;
     text-decoration: none
 }

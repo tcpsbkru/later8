@@ -177,12 +177,12 @@ $page = between("/", ".", $page);
 // $page = rtrim ( dirname ( $_SERVER ['PHP_SELF'] ), '/\\' );
 
 //count how man new addresses left
-$payment = "new";
+$trans = "new";
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT count(*) AS total FROM bits WHERE payment=?')) {
-    mysqli_stmt_bind_param($stmt, "s", $payment);
+if (mysqli_stmt_prepare($stmt, 'SELECT count(*) AS total FROM transactions WHERE trans=?')) {
+    mysqli_stmt_bind_param($stmt, "s", $trans);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $newpayment);
+    mysqli_stmt_bind_result($stmt, $newtrans);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 }
