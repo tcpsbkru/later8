@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 18, 2019 at 07:34 AM
+-- Generation Time: Feb 06, 2019 at 12:10 AM
 -- Server version: 10.1.35-MariaDB
 -- PHP Version: 7.2.9
 
@@ -27,36 +27,19 @@ USE `dbase`;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `items`
---
-
-DROP TABLE IF EXISTS `items`;
-CREATE TABLE `items` (
-  `id` int(11) NOT NULL,
-  `users_id` int(11) NOT NULL,
-  `usd` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `complete` tinyint(1) NOT NULL DEFAULT '0',
-  `purchase_date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `transactions`
 --
 
 DROP TABLE IF EXISTS `transactions`;
 CREATE TABLE `transactions` (
   `id` int(11) NOT NULL,
-  `items_id` int(11) NOT NULL,
+  `users_id` int(11) NOT NULL,
   `bitcoin` varchar(255) NOT NULL,
-  `new_address` tinyint(1) NOT NULL DEFAULT '0',
+  `trans` enum('new','pending','unconfirmed','confirmed') NOT NULL DEFAULT 'new',
   `expected_satoshis` int(11) NOT NULL DEFAULT '0',
-  `actual_satoshis` int(11) NOT NULL DEFAULT '0',
   `expected_usd` decimal(10,2) NOT NULL DEFAULT '0.00',
   `actual_usd` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `owed_usd` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `confirmed` tinyint(1) NOT NULL DEFAULT '0',
+  `sent` decimal(10,2) NOT NULL DEFAULT '0.00',
   `paytime` datetime NOT NULL,
   `times` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -70,8 +53,9 @@ CREATE TABLE `transactions` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
+  `usd` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `send` decimal(10,2) NOT NULL,
   `eth` varchar(255) COLLATE latin1_general_ci NOT NULL,
-  `complete` enum('no','yes','sent') COLLATE latin1_general_ci NOT NULL,
   `full_name` varchar(255) COLLATE latin1_general_ci NOT NULL,
   `user_name` varchar(255) COLLATE latin1_general_ci NOT NULL DEFAULT '',
   `user_email` varchar(255) COLLATE latin1_general_ci NOT NULL DEFAULT '',
@@ -97,12 +81,6 @@ CREATE TABLE `users` (
 --
 
 --
--- Indexes for table `items`
---
-ALTER TABLE `items`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `transactions`
 --
 ALTER TABLE `transactions`
@@ -118,12 +96,6 @@ ALTER TABLE `users` ADD FULLTEXT KEY `idx_search` (`full_name`,`address`,`user_e
 --
 -- AUTO_INCREMENT for dumped tables
 --
-
---
--- AUTO_INCREMENT for table `items`
---
-ALTER TABLE `items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `transactions`
