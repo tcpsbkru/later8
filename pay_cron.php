@@ -24,13 +24,13 @@ $num = 0;
 $pending = "pending";
 $unconfirmed = "unconfirmed";
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT id, users_id, expected_satoshis, expected_usd, owed_usd, bitcoin FROM transactions WHERE trans=? OR trans=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT id, users_id,  expected_satoshis, expected_usd,  bitcoin FROM transactions WHERE trans=? OR trans=?')) {
     mysqli_stmt_bind_param($stmt, "ss", $pending, $unconfirmed);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $id, $users_id, $expected_satoshis, $expected_usd, $owed_usd, $bitcoin);
+    mysqli_stmt_bind_result($stmt, $id, $users_id,  $expected_satoshis, $expected_usd,  $bitcoin);
 
     while (mysqli_stmt_fetch($stmt)) {
-        $bits[] = array($id, $users_id, $expected_satoshis, $expected_usd, $owed_usd, $bitcoin);
+        $bits[] = array($id, $users_id, $expected_satoshis, $expected_usd,  $bitcoin);
     }
 
     $num = mysqli_stmt_num_rows($stmt);
@@ -42,22 +42,21 @@ for ($i = 0; $i < $num; $i++) {
     $users_id = $bits [$i] [1];
     $expected_satoshis = $bits [$i] [2];
     $expected_usd = $bits [$i] [3];
-    $owed_usd = $bits [$i] [4];
-    $bitcoin = $bits [$i] [5];
+    $bitcoin = $bits [$i] [4];
 
     $actual_usd = null;
 
     // $url = "https://insight.bitpay.com/api/addr/" . $bitcoin . "/balance";
-    $url = "https://test-insight.bitpay.com/api/addr/" . $bitcoin . "/balance";
-    $actual_satoshis = file_get_contents($url, $headers = false);
-
-
-    if (confirmations($bitcoin)) {
-        $actual_usd = $actual_satoshis / $expected_satoshis * $owed_usd;
+//    $url = "https://test-insight.bitpay.com/api/addr/" . $bitcoin . "/balance";
+//    $actual_satoshis = file_get_contents($url, $headers = false);
+    $actual_satoshis =  116887 ;
+    if (true) {
+        //    if (confirmations($bitcoin)) {
+        $actual_usd = $actual_satoshis / $expected_satoshis * $expected_usd;
         $trans = "confirmed";
         $stmt = mysqli_stmt_init($link);
-        if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET  actual_usd=?,  trans=? WHERE id=?')) {
-            mysqli_stmt_bind_param($stmt, "dsi", $actual_usd, $trans, $id);
+        if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET    trans=?, actual_usd=?  WHERE id=?')) {
+            mysqli_stmt_bind_param($stmt, "sdi", $trans, $actual_usd, $id);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
@@ -71,49 +70,90 @@ for ($i = 0; $i < $num; $i++) {
             mysqli_stmt_close($stmt);
         }
 
-        if ($actual_satoshis >= $expected_satoshis) {
-            $subject = "payment confirmed";
-            $message = "You will recieve " . $actual_usd . " GVB.";
-            $host = $_SERVER ['HTTP_HOST'];
-            mail($user_email, $subject, $message, "From: \"Bits\" <bits@$host>\r\n" . "X-Mailer: PHP/" . phpversion());
-        } else {
-            $subject = "owe from cron";
-            $owed = $owed_usd - $actual_usd;
-            $message = "Payment pending for  " . $owed . " GVB.";
-            $host = $_SERVER ['HTTP_HOST'];
-            mail($user_email, $subject, $message, "From: \"Debt department cron\" <debt@$host>\r\n" . "X-Mailer: PHP/" . phpversion());
+
+        $subject = "payment confirmed";
+        $message = "You will recieve " . $actual_usd . " GVB.";
+        $host = $_SERVER ['HTTP_HOST'];
+        mail($user_email, $subject, $message, "From: \"Bits\" <bits@$host>\r\n" . "X-Mailer: PHP/" . phpversion());
+
+
+
+
+
+        if (!confirmations($bitcoin) && satoshis($bitcoin)) {
+            $trans = "unconfirmed";
+            $stmt = mysqli_stmt_init($link);
+            if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET trans=? WHERE id=?')) {
+                mysqli_stmt_bind_param($stmt, "si", $trans, $id);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
         }
+
+    }
+}
+
+$num = 0;
+$stmt = mysqli_stmt_init($link);
+if (mysqli_stmt_prepare($stmt, 'SELECT users_id,  actual_usd,  sent FROM transactions')) {
+//    mysqli_stmt_bind_param($stmt );
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt,  $users_id, $actual_usd, $sent);
+
+    while (mysqli_stmt_fetch($stmt)) {
+        $bits[] = array( $users_id, $actual_usd, $sent);
     }
 
-    if (!confirmations($bitcoin) && satoshis($bitcoin)) {
-        $trans = "unconfirmed";
-        $stmt = mysqli_stmt_init($link);
-        if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET trans=? WHERE id=?')) {
-            mysqli_stmt_bind_param($stmt, "si", $trans, $id);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_close($stmt);
-        }
-    }
+    $num = mysqli_stmt_num_rows($stmt);
+    mysqli_stmt_close($stmt);
+}
 
-    $expected_usd_total = null;
+for ($i = 0; $i < $num; $i++) {
+
+    $users_id = $bits [$i] [0];
+    $actual_usd = $bits [$i] [1];
+    $sent = $bits [$i] [2];
+
+    $sent_total = null;
     $actual_usd_total = null;
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
+    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_usd), SUM(sent) FROM transactions WHERE users_id=?')) {
         mysqli_stmt_bind_param($stmt, "i", $users_id);
         mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
+        mysqli_stmt_bind_result($stmt, $actual_usd_total, $sent_total);
         mysqli_stmt_fetch($stmt);
         mysqli_stmt_close($stmt);
     }
 
-    if ($actual_usd_total >= $expected_usd_total) {
-        $pending = 0.00;
-        $complete = "yes";
-        $stmt = mysqli_stmt_init($link);
-        if (mysqli_stmt_prepare($stmt, 'UPDATE users SET usd=?, pending=?, complete=? WHERE id=?')) {
-            mysqli_stmt_bind_param($stmt, "ddsi", $actual_usd, $pending, $complete, $users_id);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_close($stmt);
-        }
+    $send_total = $actual_usd_total - $sent_total;
+
+    //        if ($actual_usd_total >= $expected_usd_total) {
+    //
+    //            $complete = "yes";
+    //            $stmt = mysqli_stmt_init($link);
+    //            if (mysqli_stmt_prepare($stmt, 'UPDATE items SET usd=?, complete=? WHERE id=?')) {
+    //                mysqli_stmt_bind_param($stmt, "dsi", $actual_usd_total, $complete, $items_id);
+    //                mysqli_stmt_execute($stmt);
+    //                mysqli_stmt_close($stmt);
+    //            }
+    //        }
+
+    //        $expected_usd_total = null;
+    //        $actual_usd_total = null;
+    //        $stmt = mysqli_stmt_init($link);
+    //        if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
+    //            mysqli_stmt_bind_param($stmt, "i", $users_id);
+    //            mysqli_stmt_execute($stmt);
+    //            mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
+    //            mysqli_stmt_fetch($stmt);
+    //            mysqli_stmt_close($stmt);
+    //        }
+
+
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE users SET usd=?, send=? WHERE id=?')) {
+        mysqli_stmt_bind_param($stmt, "ddi", $actual_usd_total, $send_total, $users_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
     }
 }

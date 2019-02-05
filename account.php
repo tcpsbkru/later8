@@ -29,82 +29,115 @@ if (filter_input(INPUT_POST, 'pay_name') === 'pay') {
         mysqli_stmt_close($stmt);
     }
 
+
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'UPDATE items SET users_id=?, usd=?, paytime=now()')) {
+//        mysqli_stmt_bind_param($stmt, "id", $user_id, $expected_usd );
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
+//
+//    $items_id = mysqli_insert_id($link);
+
     $trans = "pending";
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET users_id=?, trans=?, expected_satoshis=?, expected_usd=?, owed_usd=?, paytime=now()  WHERE id=?')) {
-        mysqli_stmt_bind_param($stmt, "isidii", $user_id, $trans, $expected_satoshis, $expected_usd, $expected_usd, $id);
+    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET users_id=?, trans=?, expected_satoshis=?, expected_usd=?,  paytime=now()  WHERE id=?')) {
+        mysqli_stmt_bind_param($stmt, "isidi", $user_id,  $trans, $expected_satoshis, $expected_usd,  $id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
 
-    $pending = 0;
-    $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT pending FROM users WHERE id=?')) {
-        mysqli_stmt_bind_param($stmt, "i", $user_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $pending);
-        mysqli_stmt_fetch($stmt);
-        mysqli_stmt_close($stmt);
-    }
 
-    $expected_usd = $expected_usd + $pending;
-    $complete = "no";
-    $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'UPDATE users SET pending=?, complete=? WHERE id=?')) {
-        mysqli_stmt_bind_param($stmt, "dsi", $expected_usd, $complete, $user_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
-    }
+//    $pending = 0;
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'SELECT pending FROM users WHERE id=?')) {
+//        mysqli_stmt_bind_param($stmt, "i", $user_id);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_bind_result($stmt, $pending);
+//        mysqli_stmt_fetch($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
+//
+//    $expected_usd = $expected_usd + $pending;
+//    $complete = "no";
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'UPDATE users SET send=?, complete=? WHERE id=?')) {
+//        mysqli_stmt_bind_param($stmt, "dsi", $expected_usd, $complete, $user_id);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
 
     header("Location: pay.php?id=$id");
 }
 
-if (filter_input(INPUT_POST, 'pay_owed_name') === 'pay') {
-    foreach ($_POST as $key => $value) {
-        $data [$key] = filter($link, $value);
-    }
-    $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
-        mysqli_stmt_bind_param($stmt, "i", $user_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
-        mysqli_stmt_fetch($stmt);
-        mysqli_stmt_close($stmt);
-    }
+//if (filter_input(INPUT_POST, 'pay_owed_name') === 'pay') {
+//    foreach ($_POST as $key => $value) {
+//        $data [$key] = filter($link, $value);
+//    }
+//
+//    $items_id = $data ['items_id'];
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=? and items_id=?')) {
+//        mysqli_stmt_bind_param($stmt, "ii", $user_id, $items_id);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
+//        mysqli_stmt_fetch($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
+//
+//    $owed_usd_total = $expected_usd_total - $actual_usd_total;
+//    $expected_satoshis = usd_to_satoshi($owed_usd_total);
+//
+//    $trans = "new";
+//    $limit = 1;
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM transactions WHERE trans=? LIMIT ?')) {
+//        mysqli_stmt_bind_param($stmt, "si", $trans, $limit);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_bind_result($stmt, $id);
+//        mysqli_stmt_fetch($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
+//
+//
+//    $trans = "pending";
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET users_id=?, items_id=?, trans=?, expected_satoshis=?, owed_usd=?, paytime=now()  WHERE id=?')) {
+//        mysqli_stmt_bind_param($stmt, "iisidi", $user_id, $items_id, $trans, $expected_satoshis,  $owed_usd_total, $id);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
 
-    $owed_usd_total = $expected_usd_total - $actual_usd_total;
-    $expected_satoshis = usd_to_satoshi($owed_usd_total);
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'SELECT send FROM users WHERE id=?')) {
+//        mysqli_stmt_bind_param($stmt, "i", $user_id);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_bind_result($stmt, $send);
+//        mysqli_stmt_fetch($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
 
-    $trans = "new";
-    $limit = 1;
-    $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'SELECT id FROM transactions WHERE trans=? LIMIT ?')) {
-        mysqli_stmt_bind_param($stmt, "si", $trans, $limit);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $id);
-        mysqli_stmt_fetch($stmt);
-        mysqli_stmt_close($stmt);
-    }
-
-    $trans = "pending";
-    $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET users_id=?, trans=?, expected_satoshis=?, owed_usd=?, paytime=now()  WHERE id=?')) {
-        mysqli_stmt_bind_param($stmt, "isidi", $user_id, $trans, $expected_satoshis, $owed_usd_total, $id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
-    }
-    header("Location: pay.php?id=$id");
-}
+ //   $owed_usd_total = $owed_usd_total + $send;
+//
+//    $complete = "no";
+//    $stmt = mysqli_stmt_init($link);
+//    if (mysqli_stmt_prepare($stmt, 'UPDATE users SET complete=? WHERE id=?')) {
+//        mysqli_stmt_bind_param($stmt, "si", $complete, $user_id);
+//        mysqli_stmt_execute($stmt);
+//        mysqli_stmt_close($stmt);
+//    }
+//    header("Location: pay.php?id=$id");
+//}
 
 //get data for account
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT trans, expected_usd, actual_usd,  paytime FROM transactions WHERE users_id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT  trans, expected_usd, actual_usd,   paytime FROM transactions WHERE users_id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $trans, $expected_usd, $actual_usd, $paytime);
+    mysqli_stmt_bind_result($stmt,  $trans, $expected_usd, $actual_usd,  $paytime);
 
     while (mysqli_stmt_fetch($stmt)) {
-        $transactions[] = array($trans, $expected_usd, $actual_usd, $paytime);
+        $transactions[] = array( $trans, $expected_usd, $actual_usd,  $paytime);
     }
 
     $num_of_transactions = mysqli_stmt_num_rows($stmt);
@@ -112,16 +145,16 @@ if (mysqli_stmt_prepare($stmt, 'SELECT trans, expected_usd, actual_usd,  paytime
 }
 
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
+if (mysqli_stmt_prepare($stmt, 'SELECT  SUM(actual_usd) FROM transactions WHERE users_id=?')) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
+    mysqli_stmt_bind_result($stmt,  $actual_usd_total);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 }
-$expected_usd_total = number_format($expected_usd_total, 2, '.', '');
-$owed_usd_total = $expected_usd_total - $actual_usd_total;
-$owed_usd_total = number_format($owed_usd_total, 2, '.', '');
+$actual_usd_total = number_format($actual_usd_total, 2, '.', '');
+//$owed_usd_total = $expected_usd_total - $actual_usd_total;
+//$owed_usd_total = number_format($owed_usd_total, 2, '.', '');
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -302,27 +335,29 @@ $owed_usd_total = number_format($owed_usd_total, 2, '.', '');
                                 <!--                                <p><b>Last Access: Oct-31-2018 01:13:37 AM</b></p>-->
                                 <!--                                Registration Date: Oct-26-2018<br>-->
                                 <p><b>Your balance</b></p>
-                                Total: $<?= $expected_usd_total ?><br>
-                                <?php
-                                if ($trans == "pending" || $trans == "unconfirmed") {
-                                    echo "Outstanding: $0.00";
-                                } else {
-                                    echo "Outstanding: $" . $owed_usd_total;
-                                }
-                                ?>
-                                <p><b>Pay outstanding balance</b></p>
-                                <form class="login" action="account.php" method="post">
-                                    <?php
-                                    if ($trans == "pending" || $trans == "unconfirmed") {
-                                        echo "<input disabled  class=\"btn-gradient-secondary-grey btn-sm\"  name=\"pay_owed_name\" type=\"submit\"
-                                            value=\"pay\">";
-                                    } else {
-                                        echo "<input  class=\"btn-gradient-secondary btn-sm\"  name=\"pay_owed_name\" type=\"submit\"
-                                            value=\"pay\">";
-                                    }
-                                    ?>
-
-                                </form>
+                                Total: $<?= $actual_usd_total ?><br>
+<!--                                --><?php
+//                                if ($trans == "pending" || $trans == "unconfirmed") {
+//                                    echo "Outstanding: $0.00";
+//                                } else {
+//                                    echo "Outstanding: $" . $owed_usd_total;
+//                                }
+//                                ?>
+<!--                                <p><b>Pay outstanding balance</b></p>-->
+<!--                                <form class="login" action="account.php" method="post">-->
+<!---->
+<!--                                    --><?php
+//                                    echo   "<input type=\"hidden\" name=\"items_id\" value=\"$items_id\">";
+//                                    if ($trans == "pending" || $trans == "unconfirmed" || $owed_usd_total == 0) {
+//                                        echo "<input disabled  class=\"btn-gradient-secondary-grey btn-sm\"  name=\"pay_owed_name\" type=\"submit\"
+//                                            value=\"pay\">";
+//                                    } else {
+//                                        echo "<input  class=\"btn-gradient-secondary btn-sm\"  name=\"pay_owed_name\" type=\"submit\"
+//                                            value=\"pay\">";
+//                                    }
+//                                    ?>
+<!---->
+<!--                                </form>-->
                             </div>
                         </div>
                     </div>
@@ -353,34 +388,34 @@ $owed_usd_total = number_format($owed_usd_total, 2, '.', '');
                                     <td class=inheader><b>Date</b></td>
                                     <td class=inheader><b>Requested</b></td>
                                     <td class=inheader><b>Paid</b></td>
-                                    <td class=inheader><b>Outstanding</b></td>
+<!--                                    <td class=inheader><b>Outstanding</b></td>-->
                                     <td class=inheader><b>Transaction</b></td>
                                 </tr>
                                 <?php
                                 for ($i = 0;
                                      $i < $num_of_transactions;
                                      $i++) {
-                                    // $expected_usd, $actual_usd, $trans, $paytime
+                                    // $trans, $expected_usd, $actual_usd,  $paytime
                                     $trans = $transactions [$i] [0];
                                     $expected_usd = $transactions [$i] [1];
                                     $actual_usd = $transactions [$i] [2];
                                     $paytime = date_create($transactions [$i] [3]);
                                     $paytime = date_format($paytime, 'd/m/Y');
-                                    $owed_usd = $expected_usd - $actual_usd;
-                                    $owed_usd = number_format($owed_usd, 2, '.', '');
+//                                    $owed_usd = $owed_usd - $actual_usd;
+//                                    $owed_usd = number_format($owed_usd, 2, '.', '');
 
-                                    echo "<tr><td class=item>$paytime</td><td class=item>$expected_usd GVB</td><td class=item>$$actual_usd</td>";
+                                    echo "<tr><td class=item>$paytime</td><td class=item>$expected_usd GVB</td><td class=item>$$actual_usd</td><td class=item>$trans</td></tr>";
 
-                                    if ($trans == "pending" || $trans == "unconfirmed") {
-                                        echo "<td class=item>$0.00</td>";
-                                    } else {
-                                        if ($owed_usd > 0) {
-                                            echo "<td class=item><b style='color: red'>$$owed_usd</b></td>";
-                                        } else {
-                                            echo "<td class=item>$$owed_usd</td>";
-                                        }
-                                    }
-                                    echo "<td class=item>$trans</td></tr>";
+//                                    if ($trans == "pending" || $trans == "unconfirmed") {
+//                                        echo "<td class=item>$0.00</td>";
+//                                    } else {
+//                                        if ($owed_usd_total > 0) {
+//                                            echo "<td class=item><b style='color: red'>$$owed_usd</b></td>";
+//                                        } else {
+//                                            echo "<td class=item>$$owed_usd</td>";
+//                                        }
+//                                    }
+//                                    echo "<td class=item>$trans</td></tr>";
                                 } ?>
                             </table>
                         </td>
