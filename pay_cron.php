@@ -47,11 +47,11 @@ for ($i = 0; $i < $num; $i++) {
     $actual_usd = null;
 
     // $url = "https://insight.bitpay.com/api/addr/" . $bitcoin . "/balance";
-//    $url = "https://test-insight.bitpay.com/api/addr/" . $bitcoin . "/balance";
-//    $actual_satoshis = file_get_contents($url, $headers = false);
-    $actual_satoshis =  116887 ;
-    if (true) {
-        //    if (confirmations($bitcoin)) {
+    $url = "https://test-insight.bitpay.com/api/addr/" . $bitcoin . "/balance";
+    $actual_satoshis = file_get_contents($url, $headers = false);
+//    $actual_satoshis =  1000 ;
+//    if (true) {
+            if (confirmations($bitcoin)) {
         $actual_usd = $actual_satoshis / $expected_satoshis * $expected_usd;
         $trans = "confirmed";
         $stmt = mysqli_stmt_init($link);

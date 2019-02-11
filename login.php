@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
 include 'dbc.php';
 
 /******************* email activation *******************/
@@ -80,7 +81,30 @@ if (filter_input(INPUT_POST, 'doLogin', FILTER_SANITIZE_SPECIAL_CHARS) === 'Logi
 
 }
 
+//
+//FB.getLoginStatus(function(response) {
+//    statusChangeCallback(response);
+//});
+//
+//function checkLoginState() {
+//    FB.getLoginStatus(function(response) {
+//        statusChangeCallback(response);
+//    });
+//}
 
+
+$fb = new Facebook\Facebook([
+    'app_id' => '414325452639716',
+    'app_secret' => '93f1094fb0283ed926d94d89bc799cb6',
+    'default_graph_version' => 'v2.10',
+]);
+
+$helper = $fb->getRedirectLoginHelper();
+
+$permissions = ['email']; // Optional permissions
+$loginUrl = $helper->getLoginUrl('http://localhost/later8/fb-callback.php', $permissions);
+
+echo '<a href="' . $loginUrl . '">Log in with Facebook!</a>';
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -113,6 +137,27 @@ if (filter_input(INPUT_POST, 'doLogin', FILTER_SANITIZE_SPECIAL_CHARS) === 'Logi
     <link rel="stylesheet" type="text/css" href="app-assets/css/pages/account-login.css">
     <link rel="stylesheet" type="text/css" href="assets/css/style.css">
 
+<!--    <script>-->
+<!--        window.fbAsyncInit = function() {-->
+<!--            FB.init({-->
+<!--                appId      : '{your-app-id}',-->
+<!--                cookie     : true,-->
+<!--                xfbml      : true,-->
+<!--                version    : '{api-version}'-->
+<!--            });-->
+<!---->
+<!--            FB.AppEvents.logPageView();-->
+<!---->
+<!--        };-->
+<!---->
+<!--        (function(d, s, id){-->
+<!--            var js, fjs = d.getElementsByTagName(s)[0];-->
+<!--            if (d.getElementById(id)) {return;}-->
+<!--            js = d.createElement(s); js.id = id;-->
+<!--            js.src = "https://connect.facebook.net/en_US/sdk.js";-->
+<!--            fjs.parentNode.insertBefore(js, fjs);-->
+<!--        }(document, 'script', 'facebook-jssdk'));-->
+<!--    </script>-->
     <!-- Histats.com  START  (aync)-->    <script type="text/javascript">var _Hasync = _Hasync || [];        _Hasync.push(['Histats.start', '1,4027956,4,0,0,0,00010000']);        _Hasync.push(['Histats.fasi', '1']);        _Hasync.push(['Histats.track_hits', '']);        (function () {            var hs = document.createElement('script');            hs.type = 'text/javascript';            hs.async = true;            hs.src = ('//s10.histats.com/js15_as.js');            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);        })();</script>    <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?4027956&101" alt="stats counter"                                               border="0"></a></noscript>    <!-- Histats.com  END  --></head>
 <body class="vertical-layout vertical-compact-menu 1-column  bg-full-screen-image menu-expanded blank-page blank-page"
       data-open="click" data-menu="vertical-compact-menu" data-col="1-column">
@@ -153,6 +198,10 @@ if (isset ($_GET ['msg'])) {
 
 
 
+<!--                                    <fb:login-button-->
+<!--                                            scope="public_profile,email"-->
+<!--                                            onlogin="checkLoginState();">-->
+<!--                                    </fb:login-button>-->
 
                                     <div>
                                         <p></p>
