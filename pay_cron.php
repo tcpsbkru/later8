@@ -75,44 +75,35 @@ for ($i = 0; $i < $num; $i++) {
         $message = "You will recieve " . $actual_usd . " GVB.";
         $host = $_SERVER ['HTTP_HOST'];
         mail($user_email, $subject, $message, "From: \"Bits\" <bits@$host>\r\n" . "X-Mailer: PHP/" . phpversion());
+    }
 
-
-
-
-
-        if (!confirmations($bitcoin) && satoshis($bitcoin)) {
-            $trans = "unconfirmed";
-            $stmt = mysqli_stmt_init($link);
-            if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET trans=? WHERE id=?')) {
-                mysqli_stmt_bind_param($stmt, "si", $trans, $id);
-                mysqli_stmt_execute($stmt);
-                mysqli_stmt_close($stmt);
-            }
+    if (!confirmations($bitcoin) && satoshis($bitcoin)) {
+        $trans = "unconfirmed";
+        $stmt = mysqli_stmt_init($link);
+        if (mysqli_stmt_prepare($stmt, 'UPDATE transactions SET trans=? WHERE id=?')) {
+            mysqli_stmt_bind_param($stmt, "si", $trans, $id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
         }
-
     }
 }
 
-$num = 0;
+$num1 = 0;
 $stmt = mysqli_stmt_init($link);
-if (mysqli_stmt_prepare($stmt, 'SELECT users_id,  actual_usd,  sent FROM transactions')) {
-//    mysqli_stmt_bind_param($stmt );
+if (mysqli_stmt_prepare($stmt, 'SELECT id FROM users')) {
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt,  $users_id, $actual_usd, $sent);
+    mysqli_stmt_bind_result($stmt,  $users_id);
 
     while (mysqli_stmt_fetch($stmt)) {
-        $bits[] = array( $users_id, $actual_usd, $sent);
+        $bits[] = array( $users_id);
     }
 
-    $num = mysqli_stmt_num_rows($stmt);
+    $num1 = mysqli_stmt_num_rows($stmt);
     mysqli_stmt_close($stmt);
 }
 
-for ($i = 0; $i < $num; $i++) {
-
+for ($i = 0; $i < $num1; $i++) {
     $users_id = $bits [$i] [0];
-    $actual_usd = $bits [$i] [1];
-    $sent = $bits [$i] [2];
 
     $sent_total = null;
     $actual_usd_total = null;
@@ -126,29 +117,6 @@ for ($i = 0; $i < $num; $i++) {
     }
 
     $send_total = $actual_usd_total - $sent_total;
-
-    //        if ($actual_usd_total >= $expected_usd_total) {
-    //
-    //            $complete = "yes";
-    //            $stmt = mysqli_stmt_init($link);
-    //            if (mysqli_stmt_prepare($stmt, 'UPDATE items SET usd=?, complete=? WHERE id=?')) {
-    //                mysqli_stmt_bind_param($stmt, "dsi", $actual_usd_total, $complete, $items_id);
-    //                mysqli_stmt_execute($stmt);
-    //                mysqli_stmt_close($stmt);
-    //            }
-    //        }
-
-    //        $expected_usd_total = null;
-    //        $actual_usd_total = null;
-    //        $stmt = mysqli_stmt_init($link);
-    //        if (mysqli_stmt_prepare($stmt, 'SELECT SUM(expected_usd), SUM(actual_usd) FROM transactions WHERE users_id=?')) {
-    //            mysqli_stmt_bind_param($stmt, "i", $users_id);
-    //            mysqli_stmt_execute($stmt);
-    //            mysqli_stmt_bind_result($stmt, $expected_usd_total, $actual_usd_total);
-    //            mysqli_stmt_fetch($stmt);
-    //            mysqli_stmt_close($stmt);
-    //        }
-
 
     $stmt = mysqli_stmt_init($link);
     if (mysqli_stmt_prepare($stmt, 'UPDATE users SET usd=?, send=? WHERE id=?')) {
