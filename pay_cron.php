@@ -92,10 +92,10 @@ $num1 = 0;
 $stmt = mysqli_stmt_init($link);
 if (mysqli_stmt_prepare($stmt, 'SELECT id FROM users')) {
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt,  $users_id);
+    mysqli_stmt_bind_result($stmt,  $users_id1);
 
     while (mysqli_stmt_fetch($stmt)) {
-        $bits[] = array( $users_id);
+        $bits1[] = array( $users_id1);
     }
 
     $num1 = mysqli_stmt_num_rows($stmt);
@@ -103,13 +103,13 @@ if (mysqli_stmt_prepare($stmt, 'SELECT id FROM users')) {
 }
 
 for ($i = 0; $i < $num1; $i++) {
-    $users_id = $bits [$i] [0];
+    $users_id1 = $bits1 [$i] [0];
 
     $sent_total = null;
     $actual_usd_total = null;
     $stmt = mysqli_stmt_init($link);
     if (mysqli_stmt_prepare($stmt, 'SELECT SUM(actual_usd), SUM(sent) FROM transactions WHERE users_id=?')) {
-        mysqli_stmt_bind_param($stmt, "i", $users_id);
+        mysqli_stmt_bind_param($stmt, "i", $users_id1);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_bind_result($stmt, $actual_usd_total, $sent_total);
         mysqli_stmt_fetch($stmt);
@@ -120,7 +120,7 @@ for ($i = 0; $i < $num1; $i++) {
 
     $stmt = mysqli_stmt_init($link);
     if (mysqli_stmt_prepare($stmt, 'UPDATE users SET usd=?, send=? WHERE id=?')) {
-        mysqli_stmt_bind_param($stmt, "ddi", $actual_usd_total, $send_total, $users_id);
+        mysqli_stmt_bind_param($stmt, "ddi", $actual_usd_total, $send_total, $users_id1);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
